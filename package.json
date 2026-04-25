@@ -1,0 +1,14 @@
+{
+  "name": "img-free",
+  "private": true,
+  "packageManager": "pnpm@10.22.0",
+  "scripts": {
+    "dev": "kill-port 3000 3002 3003 || true && pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "kill-port": "^2.0.1"
+  }
+}

@@ -1,0 +1,11 @@
+node_modules
+.next
+dist
+coverage
+.DS_Store
+*.log
+
+# local samples
+apps/api/samples/*
+!apps/api/samples/README.md
+
