@@ -66,7 +66,13 @@ docker compose -f docker-compose.prod.yml up -d --build
 4) 续期（建议加到 crontab）：
 
 ```bash
-docker compose -f docker-compose.prod.yml run --rm certbot renew
+./scripts/renew-cert-and-reload-nginx.sh
+```
+
+例如（每天凌晨 3 点跑一次）：
+
+```bash
+0 3 * * * cd /path/to/img-free && DOMAIN="img-free.chrisley.site" ./scripts/renew-cert-and-reload-nginx.sh >> /var/log/img-free-renew.log 2>&1
 ```
 
 ## 常用脚本

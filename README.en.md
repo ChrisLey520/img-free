@@ -66,7 +66,13 @@ docker compose -f docker-compose.prod.yml up -d --build
 4) Renew (put on cron if desired):
 
 ```bash
-docker compose -f docker-compose.prod.yml run --rm certbot renew
+./scripts/renew-cert-and-reload-nginx.sh
+```
+
+Example (run daily at 03:00):
+
+```bash
+0 3 * * * cd /path/to/img-free && DOMAIN="img-free.chrisley.site" ./scripts/renew-cert-and-reload-nginx.sh >> /var/log/img-free-renew.log 2>&1
 ```
 
 ## Scripts
