@@ -24,6 +24,22 @@ pnpm dev
 - 前端：<http://localhost:3000>
 - API：<http://localhost:3002>（可通过环境变量 `PORT` 覆盖）
 
+### Docker（推荐）
+
+本机或 Linux 上一键起服务（需已安装 [Docker](https://docs.docker.com/get-docker/) 与 [Compose](https://docs.docker.com/compose/)）：
+
+```bash
+docker compose up --build
+```
+
+浏览器访问 <http://localhost:3000>；API 映射在 <http://localhost:3002>。  
+若部署到公网，构建前端前设置浏览器可访问的 API 根地址，例如：
+
+```bash
+export NEXT_PUBLIC_API_BASE="https://api.example.com"
+docker compose up --build
+```
+
 ## 常用脚本
 
 | 命令 | 说明 |

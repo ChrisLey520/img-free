@@ -24,6 +24,22 @@ pnpm dev
 - Web: <http://localhost:3000>
 - API: <http://localhost:3002> (override with `PORT`)
 
+### Docker (recommended)
+
+One command (requires [Docker](https://docs.docker.com/get-docker/) and [Compose](https://docs.docker.com/compose/)):
+
+```bash
+docker compose up --build
+```
+
+Open <http://localhost:3000>; API is on <http://localhost:3002>.  
+For a public deployment, set the API URL the **browser** will call before building the web image:
+
+```bash
+export NEXT_PUBLIC_API_BASE="https://api.example.com"
+docker compose up --build
+```
+
 ## Scripts
 
 | Command | Description |
