@@ -31,4 +31,5 @@ COPY --from=builder /repo/apps/api/bin apps/api/bin
 WORKDIR /repo/apps/api
 EXPOSE 3002
 ENV PORT=3002
+ENV STEXATLASER_BIN=/repo/apps/api/bin/stexatlaser-linux/stex
 CMD ["node", "dist/main.js"]
