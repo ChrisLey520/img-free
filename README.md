@@ -40,6 +40,35 @@ export NEXT_PUBLIC_API_BASE="https://api.example.com"
 docker compose up --build
 ```
 
+### 公网部署（Nginx + HTTPS + 无端口冲突）
+
+无需在服务器上手动安装 Nginx：直接使用 Docker 拉取并运行 Nginx 容器，对外只暴露 **80/443**，内部把 `/` 代理到 web，把 `/api` 代理到 api。
+
+1) 准备域名 `DOMAIN`（DNS 指向服务器公网 IP），并开放 80/443。
+
+2) 首次申请证书（替换邮箱与域名）：
+
+```bash
+export DOMAIN="example.com"
+docker compose -f docker-compose.prod.yml run --rm certbot certonly \
+  --webroot -w /var/www/certbot \
+  -d "$DOMAIN" \
+  --email you@example.com --agree-tos --no-eff-email
+```
+
+3) 启动生产栈：
+
+```bash
+export DOMAIN="example.com"
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+4) 续期（建议加到 crontab）：
+
+```bash
+docker compose -f docker-compose.prod.yml run --rm certbot renew
+```
+
 ## 常用脚本
 
 | 命令 | 说明 |

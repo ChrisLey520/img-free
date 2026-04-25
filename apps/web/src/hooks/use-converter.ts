@@ -41,7 +41,9 @@ export function formatBytes(n: number) {
 }
 
 export function useConverter() {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:3002";
+  const apiBase =
+    process.env.NEXT_PUBLIC_API_BASE ??
+    (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:3002");
 
   const [file, setFile] = useState<File | null>(null);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);

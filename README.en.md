@@ -40,6 +40,35 @@ export NEXT_PUBLIC_API_BASE="https://api.example.com"
 docker compose up --build
 ```
 
+### Public deployment (Nginx + HTTPS, no port conflicts)
+
+You **do not** need to install Nginx on the server. This repo provides a production compose file that runs an Nginx container exposing only **80/443**, proxying `/` → web and `/api` → api.
+
+1) Prepare your domain `DOMAIN` (DNS → server public IP) and open ports 80/443.
+
+2) Get the initial certificate (replace email and domain):
+
+```bash
+export DOMAIN="example.com"
+docker compose -f docker-compose.prod.yml run --rm certbot certonly \
+  --webroot -w /var/www/certbot \
+  -d "$DOMAIN" \
+  --email you@example.com --agree-tos --no-eff-email
+```
+
+3) Start the production stack:
+
+```bash
+export DOMAIN="example.com"
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+4) Renew (put on cron if desired):
+
+```bash
+docker compose -f docker-compose.prod.yml run --rm certbot renew
+```
+
 ## Scripts
 
 | Command | Description |
