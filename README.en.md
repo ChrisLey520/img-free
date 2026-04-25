@@ -75,6 +75,24 @@ Example (run daily at 03:00):
 0 3 * * * cd /path/to/img-free && DOMAIN="img-free.chrisley.site" ./scripts/renew-cert-and-reload-nginx.sh >> /var/log/img-free-renew.log 2>&1
 ```
 
+### Public deployment (Caddy: zero manual cert steps)
+
+If you want **no manual certificate requests/renewals**, use Caddy. It will automatically obtain HTTPS certificates on first start and renew them automatically.
+
+Prerequisites:
+
+- DNS: `img-free.chrisley.site` A record → your server public IP
+- Ports: 80/443 open (required for ACME issuance)
+
+Start:
+
+```bash
+export DOMAIN="img-free.chrisley.site"
+docker compose -f docker-compose.caddy.prod.yml up -d --build
+```
+
+Then open: `https://img-free.chrisley.site`
+
 ## Scripts
 
 | Command | Description |

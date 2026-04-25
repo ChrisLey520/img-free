@@ -75,6 +75,24 @@ docker compose -f docker-compose.prod.yml up -d --build
 0 3 * * * cd /path/to/img-free && DOMAIN="img-free.chrisley.site" ./scripts/renew-cert-and-reload-nginx.sh >> /var/log/img-free-renew.log 2>&1
 ```
 
+### 公网部署（Caddy：零手动证书）
+
+如果你希望**除了启动命令外不再手动申请/续期证书**，推荐使用 Caddy：它会在首次启动时自动签发 HTTPS 证书，并自动续期。
+
+前提：
+
+- DNS：`img-free.chrisley.site` 的 A 记录指向服务器公网 IP
+- 端口：放行 80/443（Caddy 需要用于 ACME 验证与签发）
+
+启动：
+
+```bash
+export DOMAIN="img-free.chrisley.site"
+docker compose -f docker-compose.caddy.prod.yml up -d --build
+```
+
+之后直接访问：`https://img-free.chrisley.site`
+
 ## 常用脚本
 
 | 命令 | 说明 |
