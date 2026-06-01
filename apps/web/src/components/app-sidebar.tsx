@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImageIcon, LayersIcon, SettingsIcon } from "lucide-react";
+import { ImageIcon, LayersIcon, SettingsIcon, SparklesIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -57,9 +57,13 @@ export function AppSidebar({ apiBase, tool }: Props) {
 
   const pathPrefix = locale === "zh-CN" ? "" : `/${locale}`;
   function goTool(nextTool: Tool) {
-    // 默认语言不带前缀；sprite 工具挂在 /sprite；format 工具挂在 /
-    const base = nextTool === "sprite" ? "/sprite" : "/";
-    router.push(`${pathPrefix}${base === "/" ? "" : base}`);
+    if (nextTool === "sprite") {
+      router.push(`${pathPrefix}/sprite`);
+    } else if (nextTool === "redeem") {
+      router.push(`${pathPrefix}/pixel`);
+    } else {
+      router.push(pathPrefix || "/");
+    }
     router.refresh();
   }
 
@@ -68,8 +72,7 @@ export function AppSidebar({ apiBase, tool }: Props) {
     const nl = (locales as readonly string[]).includes(nextLocale) ? (nextLocale as Locale) : locale;
     document.cookie = `locale=${nl}; path=/; samesite=lax`;
     const prefix = nl === "zh-CN" ? "" : `/${nl}`;
-    // 切换语言时保持当前工具（format/sprite）
-    const base = tool === "sprite" ? "/sprite" : "/";
+    const base = tool === "sprite" ? "/sprite" : tool === "redeem" ? "/pixel" : "/";
     router.push(`${prefix}${base === "/" ? "" : base}`);
     router.refresh();
   }
@@ -115,6 +118,19 @@ export function AppSidebar({ apiBase, tool }: Props) {
                       <button type="button">
                         <LayersIcon />
                         <span>{t("nav.sprite")}</span>
+                      </button>
+                    }
+                  />
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={tool === "redeem"}
+                    tooltip={t("nav.redeem")}
+                    onClick={() => goTool("redeem")}
+                    render={
+                      <button type="button">
+                        <SparklesIcon />
+                        <span>{t("nav.redeem")}</span>
                       </button>
                     }
                   />
