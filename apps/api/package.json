@@ -11,7 +11,7 @@
     "postinstall": "prisma generate",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "PORT=3002 nest start --watch",
+    "start:dev": "PORT=3002 DATABASE_URL=\"file:./prisma/dev.db\" ADMIN_KEY=\"dev-admin-key\" nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "setup:stex": "node scripts/setup-stexatlaser-linux.mjs",
