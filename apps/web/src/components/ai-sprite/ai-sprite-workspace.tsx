@@ -16,7 +16,7 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:3002");
 
-const PRESET_ACTIONS = ["行走", "奔跑", "待机", "跳跃", "攻击", "受伤", "死亡"];
+const PRESET_ACTIONS = ["行走", "奔跑", "待机", "跳跃", "攻击", "受伤", "死亡", "防御", "蹲伏", "翻滚", "施法", "推", "爬行", "胜利"];
 
 type PipelineMode = "img2img" | "controlnet";
 

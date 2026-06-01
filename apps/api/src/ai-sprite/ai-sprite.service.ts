@@ -63,8 +63,12 @@ export class AiSpriteService {
     return Array.from({ length: count }, (_, i) => hints[i % hints.length]);
   }
 
-  private buildPrompt(characterDesc: string, action: string, hint: string, idx: number, total: number) {
+  private buildPrompt(characterDesc: string, action: string, hint: string, idx: number, total: number, mode: PipelineMode) {
     const char = characterDesc.trim() || 'game character';
+    if (mode === 'controlnet') {
+      // ControlNet 姿态由骨骼图驱动，提示词只需描述外貌风格，不重复描述姿态
+      return `pixel art game sprite, 8-bit retro style, ${char}, ${action} animation, white background, centered, consistent character design, clean pixel lines`;
+    }
     return `pixel art game sprite, 8-bit retro style, ${char}, ${action} animation frame ${idx + 1} of ${total}, ${hint}, white background, centered, consistent character design, clean lines`;
   }
 
@@ -195,7 +199,7 @@ export class AiSpriteService {
     // 并行生成所有帧
     const rawFrames = await Promise.all(
       frameHints.map((hint, i) => {
-        const prompt = this.buildPrompt(characterDesc, action, hint, i, count);
+        const prompt = this.buildPrompt(characterDesc, action, hint, i, count, mode);
         if (mode === 'controlnet') {
           return this.generateControlNet(skeletons[i], imageDataUrl, prompt);
         }
