@@ -8,6 +8,7 @@ import { StorageModule } from './storage/storage.module.js';
 import { RedemptionModule } from './redemption/redemption.module.js';
 import { CleanupModule } from './cleanup/cleanup.module.js';
 import { PddModule } from './pdd/pdd.module.js';
+import { SpritesheetModule } from './spritesheet/spritesheet.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PddModule } from './pdd/pdd.module.js';
     RedemptionModule,
     CleanupModule,
     PddModule,
+    SpritesheetModule,
   ],
   controllers: [AppController],
   providers: [AppService],

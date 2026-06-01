@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImageIcon, LayersIcon, SettingsIcon, SparklesIcon } from "lucide-react";
+import { ImageIcon, LayersIcon, LayoutGridIcon, SettingsIcon, SparklesIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -61,6 +61,8 @@ export function AppSidebar({ apiBase, tool }: Props) {
       router.push(`${pathPrefix}/sprite`);
     } else if (nextTool === "redeem") {
       router.push(`${pathPrefix}/pixel`);
+    } else if (nextTool === "spritesheet") {
+      router.push(`${pathPrefix}/sprite-sheet`);
     } else {
       router.push(pathPrefix || "/");
     }
@@ -72,7 +74,7 @@ export function AppSidebar({ apiBase, tool }: Props) {
     const nl = (locales as readonly string[]).includes(nextLocale) ? (nextLocale as Locale) : locale;
     document.cookie = `locale=${nl}; path=/; samesite=lax`;
     const prefix = nl === "zh-CN" ? "" : `/${nl}`;
-    const base = tool === "sprite" ? "/sprite" : tool === "redeem" ? "/pixel" : "/";
+    const base = tool === "sprite" ? "/sprite" : tool === "redeem" ? "/pixel" : tool === "spritesheet" ? "/sprite-sheet" : "/";
     router.push(`${prefix}${base === "/" ? "" : base}`);
     router.refresh();
   }
@@ -118,6 +120,19 @@ export function AppSidebar({ apiBase, tool }: Props) {
                       <button type="button">
                         <LayersIcon />
                         <span>{t("nav.sprite")}</span>
+                      </button>
+                    }
+                  />
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={tool === "spritesheet"}
+                    tooltip={t("nav.spritesheet")}
+                    onClick={() => goTool("spritesheet")}
+                    render={
+                      <button type="button">
+                        <LayoutGridIcon />
+                        <span>{t("nav.spritesheet")}</span>
                       </button>
                     }
                   />

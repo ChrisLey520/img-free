@@ -10,6 +10,7 @@ export type MessageKey =
   | "nav.format"
   | "nav.sprite"
   | "nav.redeem"
+  | "nav.spritesheet"
   | "settings.title"
   | "settings.description"
   | "settings.apiBase"
@@ -72,6 +73,7 @@ const MESSAGES: Record<Locale, Messages> = {
     "nav.format": "Format Converter",
     "nav.sprite": "Pixel Sprite",
     "nav.redeem": "Pixel Avatar",
+    "nav.spritesheet": "Sprite Sheet",
     "nav.settings": "Settings",
     "settings.title": "Settings",
     "settings.description": "Environment and defaults for this workspace.",
@@ -132,6 +134,7 @@ const MESSAGES: Record<Locale, Messages> = {
     "nav.format": "格式转换",
     "nav.sprite": "像素精灵",
     "nav.redeem": "像素兑换",
+    "nav.spritesheet": "精灵表制作",
     "nav.settings": "设置",
     "settings.title": "设置",
     "settings.description": "本工作区的环境与默认项。",
@@ -192,6 +195,7 @@ const MESSAGES: Record<Locale, Messages> = {
     "nav.format": "格式轉換",
     "nav.sprite": "像素精靈",
     "nav.redeem": "像素兌換",
+    "nav.spritesheet": "精靈表製作",
     "nav.settings": "設定",
     "settings.title": "設定",
     "settings.description": "此工作區的環境與預設項目。",
