@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { customAlphabet } from 'nanoid';
+import sharp from 'sharp';
 import { DatabaseService } from '../database/database.service.js';
 import { StorageService } from '../storage/storage.service.js';
 import { ConvertService } from '../convert/convert.service.js';
@@ -80,8 +81,16 @@ export class RedemptionService {
     if (record.status === 'EXPIRED') throw new ForbiddenException('制作码已过期');
 
     const { width, height } = PIXEL_PRESETS[preset];
-    const result = await this.convertService.convert(imageBuffer, filename, 'png', {
-      sprite: { enabled: true, width, height, fit: 'inside' },
+
+    // 前处理：锐化保留缩小前的边缘细节 + 轻微提升饱和度让颜色更鲜艳
+    const enhanced = await sharp(imageBuffer, { failOn: 'none' })
+      .sharpen({ sigma: 1.2 })
+      .modulate({ saturation: 1.25 })
+      .png()
+      .toBuffer();
+
+    const result = await this.convertService.convert(enhanced, filename, 'png', {
+      sprite: { enabled: true, width, height, fit: 'inside', kernel: 'lanczos3' },
     });
 
     const outputUrl = result.output.dataUrl;

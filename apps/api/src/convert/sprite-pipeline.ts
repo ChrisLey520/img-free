@@ -79,9 +79,10 @@ function canvasBackground(sprite: SpriteEnabled): {
 }
 
 /**
- * 最近邻缩放 + 固定 WxH 画布 + 可选调色板 PNG。
+ * 缩放 + 固定 WxH 画布 + 可选调色板 PNG。
  * - inside：等比落入框内后居中铺到精确 WxH（letterbox）
  * - cover / fill：Sharp resize 直接得到精确 WxH
+ * kernel 默认 nearest（原有行为）；传入 lanczos3 可获得更高品质。
  */
 export async function buildSpritePngBuffer(
   input: Buffer,
@@ -90,6 +91,8 @@ export async function buildSpritePngBuffer(
 ): Promise<Buffer> {
   const fit = sprite.fit ?? 'inside';
   const pc = sprite.paletteColors;
+  const kernel = (sprite.kernel as sharp.KernelEnum[keyof sharp.KernelEnum] | undefined)
+    ?? sharp.kernel.nearest;
   const pngOptions: sharp.PngOptions =
     pc != null
       ? { palette: true, colors: pc, compressionLevel: pngCompressionLevel }
@@ -102,7 +105,7 @@ export async function buildSpritePngBuffer(
         width: sprite.width,
         height: sprite.height,
         fit: 'inside',
-        kernel: sharp.kernel.nearest,
+        kernel,
       })
       .toBuffer();
 
@@ -130,7 +133,7 @@ export async function buildSpritePngBuffer(
     width: sprite.width,
     height: sprite.height,
     fit,
-    kernel: sharp.kernel.nearest,
+    kernel,
     position: 'centre',
   };
   if (fit === 'cover') {

@@ -32,6 +32,8 @@ export const SpriteOptionsSchema = z
       .union([z.number().int().min(2).max(256), z.null()])
       .optional(),
     includeGamePayload: z.boolean().optional(),
+    /** 缩放核，默认 nearest（原有行为）；lanczos3 品质更高，适合头像制作 */
+    kernel: z.enum(['nearest', 'lanczos2', 'lanczos3', 'mitchell', 'cubic']).optional(),
   })
   .superRefine((val, ctx) => {
     if (!val.enabled) return;
