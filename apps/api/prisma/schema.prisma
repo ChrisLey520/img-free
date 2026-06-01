@@ -8,12 +8,13 @@ datasource db {
 }
 
 model RedemptionCode {
-  id         String    @id @default(cuid())
-  code       String    @unique
-  status     String    @default("UNUSED")
-  resultPath String?
-  pddOrderId String?
-  createdAt  DateTime  @default(now())
-  usedAt     DateTime?
-  expiresAt  DateTime?
+  id           String    @id @default(cuid())
+  code         String    @unique
+  status       String    @default("UNUSED")
+  resultPath   String?
+  pddOrderId   String?
+  remakesUsed  Int       @default(0)
+  createdAt    DateTime  @default(now())
+  usedAt       DateTime?
+  expiresAt    DateTime?
 }
