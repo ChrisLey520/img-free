@@ -8,4 +8,5 @@ node_modules
 dev.db
 *.db-journal
 prisma/dev.db
+prisma/prisma/dev.db
 uploads/
