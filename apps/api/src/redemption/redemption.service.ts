@@ -64,7 +64,7 @@ export class RedemptionService {
 
   async redeem(code: string, imageBuffer: Buffer, filename: string, preset: PresetKey) {
     const record = await this.db.redemptionCode.findUnique({ where: { code } });
-    if (!record) throw new NotFoundException('兑换码不存在');
+    if (!record) throw new NotFoundException('制作码不存在');
     if (record.status === 'USED') {
       const resultExists = await this.storage.exists(code);
       if (resultExists && record.expiresAt && record.expiresAt > new Date()) {
@@ -75,9 +75,9 @@ export class RedemptionService {
           previewDataUrl: `data:image/png;base64,${buf!.toString('base64')}`,
         };
       }
-      throw new BadRequestException('兑换码已使用');
+      throw new BadRequestException('制作码已使用');
     }
-    if (record.status === 'EXPIRED') throw new ForbiddenException('兑换码已过期');
+    if (record.status === 'EXPIRED') throw new ForbiddenException('制作码已过期');
 
     const { width, height } = PIXEL_PRESETS[preset];
     const result = await this.convertService.convert(imageBuffer, filename, 'png', {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,49 +46,33 @@ export default function AdminPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
+  // 单行复制反馈：key = code string
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const saved = sessionStorage.getItem("admin_key");
-    if (saved) {
-      setAdminKey(saved);
-      loadCodes(saved);
-    }
+    if (saved) { setAdminKey(saved); loadCodes(saved); }
   }, []);
 
   async function loadCodes(key: string) {
     try {
-      const res = await fetch(`${API_BASE}/admin/codes`, {
-        headers: { "x-admin-key": key },
-      });
-      if (res.status === 403) {
-        setAuthenticated(false);
-        setAuthError("密钥错误");
-        return;
-      }
+      const res = await fetch(`${API_BASE}/admin/codes`, { headers: { "x-admin-key": key } });
+      if (res.status === 403) { setAuthenticated(false); setAuthError("密钥错误"); return; }
       const data = (await res.json()) as CodeRecord[];
       setCodes(data);
       setAuthenticated(true);
       sessionStorage.setItem("admin_key", key);
-    } catch {
-      setAuthError("网络错误");
-    }
+    } catch { setAuthError("网络错误"); }
   }
 
-  async function handleAuth() {
-    setAuthError("");
-    await loadCodes(adminKey);
-  }
+  async function handleAuth() { setAuthError(""); await loadCodes(adminKey); }
 
   async function handleGenerate() {
     const count = parseInt(generateCount, 10);
-    if (!count || count < 1 || count > 200) {
-      setError("数量须在 1-200 之间");
-      return;
-    }
-    setBusy(true);
-    setMsg("");
-    setError("");
+    if (!count || count < 1 || count > 200) { setError("数量须在 1-200 之间"); return; }
+    setBusy(true); setMsg(""); setError("");
     try {
       const res = await fetch(`${API_BASE}/admin/codes`, {
         method: "POST",
@@ -99,22 +82,25 @@ export default function AdminPage() {
       if (!res.ok) throw new Error("生成失败");
       const newCodes = (await res.json()) as CodeRecord[];
       setCodes((prev) => [...newCodes, ...prev]);
-      setMsg(`成功生成 ${newCodes.length} 个兑换码`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "未知错误");
-    } finally {
-      setBusy(false);
-    }
+      setMsg(`成功生成 ${newCodes.length} 个制作码`);
+    } catch (e) { setError(e instanceof Error ? e.message : "未知错误"); }
+    finally { setBusy(false); }
+  }
+
+  function copyCode(code: string) {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 1500);
+    });
   }
 
   function copyUnused() {
     const unused = codes.filter((c) => c.status === "UNUSED").map((c) => c.code);
-    navigator.clipboard.writeText(unused.join("\n"));
-    setMsg(`已复制 ${unused.length} 个未使用兑换码到剪贴板`);
-  }
-
-  function copyCode(code: string) {
-    navigator.clipboard.writeText(code);
+    navigator.clipboard.writeText(unused.join("\n")).then(() => {
+      setCopiedAll(true);
+      setMsg(`已复制 ${unused.length} 个未使用制作码到剪贴板`);
+      setTimeout(() => setCopiedAll(false), 1500);
+    });
   }
 
   const unusedCount = codes.filter((c) => c.status === "UNUSED").length;
@@ -124,17 +110,12 @@ export default function AdminPage() {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center px-4">
         <Card className="w-full max-w-sm">
-          <CardHeader>
-            <CardTitle className="text-base">🔐 管理员登录</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">🔐 管理员登录</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="admin-key">管理员密钥 (ADMIN_KEY)</Label>
               <Input
-                id="admin-key"
-                ref={inputRef}
-                type="password"
-                placeholder="输入 ADMIN_KEY"
+                id="admin-key" ref={inputRef} type="password" placeholder="输入 ADMIN_KEY"
                 value={adminKey}
                 onChange={(e) => { setAdminKey(e.target.value); setAuthError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && handleAuth()}
@@ -152,7 +133,7 @@ export default function AdminPage() {
     <main className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">🛠 兑换码管理后台</h1>
+          <h1 className="text-xl font-bold">🛠 制作码管理后台</h1>
           <Button variant="outline" size="sm" onClick={() => { sessionStorage.removeItem("admin_key"); setAuthenticated(false); }}>
             退出
           </Button>
@@ -160,49 +141,33 @@ export default function AdminPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <div className="text-2xl font-bold">{codes.length}</div>
-              <div className="text-xs text-muted-foreground">总计</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{unusedCount}</div>
-              <div className="text-xs text-muted-foreground">未使用</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-4 text-center">
-              <div className="text-2xl font-bold text-muted-foreground">{usedCount}</div>
-              <div className="text-xs text-muted-foreground">已使用</div>
-            </CardContent>
-          </Card>
+          <Card><CardContent className="pt-4 text-center">
+            <div className="text-2xl font-bold">{codes.length}</div>
+            <div className="text-xs text-muted-foreground">总计</div>
+          </CardContent></Card>
+          <Card><CardContent className="pt-4 text-center">
+            <div className="text-2xl font-bold text-green-600">{unusedCount}</div>
+            <div className="text-xs text-muted-foreground">未使用</div>
+          </CardContent></Card>
+          <Card><CardContent className="pt-4 text-center">
+            <div className="text-2xl font-bold text-muted-foreground">{usedCount}</div>
+            <div className="text-xs text-muted-foreground">已使用</div>
+          </CardContent></Card>
         </div>
 
         {/* Generate */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">生成兑换码</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-sm">生成制作码</CardTitle></CardHeader>
           <CardContent>
             <div className="flex gap-2 items-end">
               <div className="space-y-1 flex-1">
                 <Label htmlFor="gen-count">数量</Label>
-                <Input
-                  id="gen-count"
-                  type="number"
-                  min={1}
-                  max={200}
-                  value={generateCount}
-                  onChange={(e) => setGenerateCount(e.target.value)}
-                />
+                <Input id="gen-count" type="number" min={1} max={200} value={generateCount}
+                  onChange={(e) => setGenerateCount(e.target.value)} />
               </div>
-              <Button onClick={handleGenerate} disabled={busy}>
-                {busy ? "生成中…" : "生成"}
-              </Button>
+              <Button onClick={handleGenerate} disabled={busy}>{busy ? "生成中…" : "生成"}</Button>
               <Button variant="outline" onClick={copyUnused} disabled={unusedCount === 0}>
-                复制全部未使用 ({unusedCount})
+                {copiedAll ? "✓ 已复制" : `复制全部未使用 (${unusedCount})`}
               </Button>
             </div>
             {msg && <p className="text-sm text-green-600 mt-2">{msg}</p>}
@@ -212,18 +177,16 @@ export default function AdminPage() {
 
         {/* Code list */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm">兑换码列表</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-sm">制作码列表</CardTitle></CardHeader>
           <CardContent>
             {codes.length === 0 ? (
-              <p className="text-sm text-muted-foreground">暂无兑换码</p>
+              <p className="text-sm text-muted-foreground">暂无制作码</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-muted-foreground">
-                      <th className="text-left py-2 pr-4 font-medium">兑换码</th>
+                      <th className="text-left py-2 pr-4 font-medium">制作码</th>
                       <th className="text-left py-2 pr-4 font-medium">状态</th>
                       <th className="text-left py-2 pr-4 font-medium">创建时间</th>
                       <th className="text-left py-2 pr-4 font-medium">使用时间</th>
@@ -242,7 +205,9 @@ export default function AdminPage() {
                         <td className="py-2 pr-4 text-muted-foreground">{c.usedAt ? new Date(c.usedAt).toLocaleString("zh-CN") : "—"}</td>
                         <td className="py-2 text-muted-foreground">{c.expiresAt ? new Date(c.expiresAt).toLocaleDateString("zh-CN") : "—"}</td>
                         <td className="py-2 pl-2">
-                          <Button variant="ghost" size="sm" onClick={() => copyCode(c.code)}>复制</Button>
+                          <Button variant="ghost" size="sm" onClick={() => copyCode(c.code)}>
+                            {copiedCode === c.code ? "✓ 已复制" : "复制"}
+                          </Button>
                         </td>
                       </tr>
                     ))}
