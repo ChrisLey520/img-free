@@ -35,7 +35,8 @@ type ModalState =
   | { type: "none" }
   | { type: "no_code" }
   | { type: "not_found" }
-  | { type: "expired" };
+  | { type: "expired" }
+  | { type: "new_code_confirm" };
 
 export function RedeemContent() {
   const apiBase = getApiBase();
@@ -51,6 +52,7 @@ export function RedeemContent() {
   const [convertError, setConvertError]     = useState("");
   const [modal, setModal]                   = useState<ModalState>({ type: "none" });
   const [remakesRemaining, setRemakesRemaining] = useState<number>(MAX_REMAKES);
+  const [satisfied, setSatisfied]               = useState(false);
 
   const [result, setResult] = useState<{
     code: string;
@@ -125,6 +127,21 @@ export function RedeemContent() {
     a.href = result.previewDataUrl;
     a.download = `pixel-avatar-${result.code}.png`;
     a.click();
+    setSatisfied(true);
+  }
+
+  function handleReset() {
+    setPhase("form");
+    setFile(null);
+    if (localPreview) URL.revokeObjectURL(localPreview);
+    setLocalPreview(null);
+    setCode("");
+    setPreset("standard");
+    setStyle("natural");
+    setResult(null);
+    setRemakesRemaining(MAX_REMAKES);
+    setSatisfied(false);
+    setConvertError("");
   }
 
   return (
@@ -257,17 +274,26 @@ export function RedeemContent() {
               {/* Action buttons */}
               <div className="flex flex-col gap-2">
                 <Button onClick={handleDownload} className="w-full">
-                  {remakesRemaining > 0 ? "满意！下载图片" : "下载图片"}
+                  {!satisfied && remakesRemaining > 0 ? "满意！下载图片" : "下载图片"}
                 </Button>
+                {!satisfied && (
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    disabled={remakesRemaining === 0}
+                    onClick={handleRemake}
+                  >
+                    {remakesRemaining > 0
+                      ? `不满意，重选尺寸（剩余 ${remakesRemaining} 次）`
+                      : "重制次数已用完"}
+                  </Button>
+                )}
                 <Button
-                  variant="outline"
-                  className="w-full"
-                  disabled={remakesRemaining === 0}
-                  onClick={handleRemake}
+                  variant="ghost"
+                  className="w-full text-muted-foreground"
+                  onClick={() => setModal({ type: "new_code_confirm" })}
                 >
-                  {remakesRemaining > 0
-                    ? `不满意，重选尺寸（剩余 ${remakesRemaining} 次）`
-                    : "重制次数已用完"}
+                  制作其他图片
                 </Button>
               </div>
             </CardContent>
@@ -291,6 +317,14 @@ export function RedeemContent() {
       <Modal open={modal.type === "expired"} onClose={() => setModal({ type: "none" })}
         title="制作码已过期" description="该制作码已使用，且生成的图片已超过保存期（3天）。如需重新制作请联系客服。"
         actions={[{ label: "确定", onClick: () => setModal({ type: "none" }) }]} />
+
+      <Modal open={modal.type === "new_code_confirm"} onClose={() => setModal({ type: "none" })}
+        title="制作其他图片"
+        description="制作其他图片需要使用新的制作码。确认后将清空当前结果，请前往购买新的制作码。"
+        actions={[
+          { label: "取消", variant: "outline", onClick: () => setModal({ type: "none" }) },
+          { label: "确定", onClick: () => { setModal({ type: "none" }); handleReset(); } },
+        ]} />
     </div>
   );
 }
