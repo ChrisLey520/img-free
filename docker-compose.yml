@@ -7,6 +7,15 @@ services:
       - "3002:3002"
     environment:
       PORT: "3002"
+      DATABASE_URL: "file:/app/data/db.sqlite"
+      ADMIN_KEY: ${ADMIN_KEY:-changeme}
+      REDEEM_BASE_URL: ${REDEEM_BASE_URL:-http://localhost:3000}
+      PINDUODUO_APP_ID: ${PINDUODUO_APP_ID:-}
+      PINDUODUO_APP_SECRET: ${PINDUODUO_APP_SECRET:-}
+      PINDUODUO_ACCESS_TOKEN: ${PINDUODUO_ACCESS_TOKEN:-}
+    volumes:
+      - api-data:/app/data
+      - api-uploads:/app/uploads
 
   web:
     build:
@@ -20,3 +29,7 @@ services:
       PORT: "3000"
     depends_on:
       - api
+
+volumes:
+  api-data:
+  api-uploads:
