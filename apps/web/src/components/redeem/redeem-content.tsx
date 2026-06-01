@@ -120,8 +120,9 @@ export function RedeemContent() {
 
   function handleDownload() {
     if (!result) return;
+    // 直接用内存里的 previewDataUrl 下载，避免浏览器缓存旧版本
     const a = document.createElement("a");
-    a.href = `${apiBase}/results/${result.code}`;
+    a.href = result.previewDataUrl;
     a.download = `pixel-avatar-${result.code}.png`;
     a.click();
   }

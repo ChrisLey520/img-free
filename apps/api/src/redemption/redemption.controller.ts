@@ -84,7 +84,7 @@ export class RedemptionController {
     if (!buf) throw new NotFoundException('Result not found or expired');
     res.set('Content-Type', 'image/png');
     res.set('Content-Disposition', `attachment; filename="${code}.png"`);
-    res.set('Cache-Control', 'private, max-age=86400');
+    res.set('Cache-Control', 'no-store');
     res.send(buf);
   }
 
