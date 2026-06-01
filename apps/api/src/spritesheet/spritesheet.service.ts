@@ -86,32 +86,26 @@ export class SpritesheetService {
       },
     };
 
-    // 4. 动画 GIF（gif-encoder-2，逐帧传入 RGBA raw 数据）
+    // 4. 动画 GIF
+    // 不使用 createReadStream()：流式写法存在竞态（emitData 会清空内部 buffer）。
+    // 直接用同步方式写帧，finish() 后从 encoder.out.getData() 取完整字节。
     const delay = Math.max(20, Math.round(1000 / fps));
-    const gifBuffer = await new Promise<Buffer>((resolve, reject) => {
-      const encoder = new GIFEncoder(cellW, cellH, 'octree');
-      const chunks: Buffer[] = [];
-      const stream = encoder.createReadStream();
-      stream.on('data', (c: Buffer) => chunks.push(c));
-      stream.on('end', () => resolve(Buffer.concat(chunks)));
-      stream.on('error', reject);
+    const encoder = new GIFEncoder(cellW, cellH, 'octree');
+    encoder.start();
+    encoder.setDelay(delay);
+    encoder.setRepeat(0);
+    encoder.setQuality(10);
 
-      encoder.start();
-      encoder.setDelay(delay);
-      encoder.setRepeat(0);
-      encoder.setQuality(10);
+    for (const frameBuf of resized) {
+      const { data } = await sharp(frameBuf)
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      encoder.addFrame(data);
+    }
+    encoder.finish();
 
-      (async () => {
-        for (const frameBuf of resized) {
-          const { data } = await sharp(frameBuf)
-            .ensureAlpha()
-            .raw()
-            .toBuffer({ resolveWithObject: true });
-          encoder.addFrame(data);
-        }
-        encoder.finish();
-      })().catch(reject);
-    });
+    const gifBuffer = encoder.out.getData();
 
     return {
       sheet,

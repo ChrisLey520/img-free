@@ -1,6 +1,8 @@
 declare module 'gif-encoder-2' {
   import { Readable } from 'stream';
   class GIFEncoder {
+    /** Internal byte buffer — only accumulates data when NO readStream is attached. */
+    out: { getData(): Buffer };
     constructor(
       width: number,
       height: number,
