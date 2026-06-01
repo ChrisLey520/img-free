@@ -25,11 +25,9 @@ const STYLES: { key: StyleKey; label: string; desc: string }[] = [
 
 const MAX_REMAKES = 3;
 
-function getApiBase() {
-  if (typeof window === "undefined") return "http://localhost:3002";
-  return process.env.NEXT_PUBLIC_API_BASE ??
-    (window.location.hostname === "localhost" ? "http://localhost:3002" : "/api");
-}
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  (process.env.NODE_ENV === "production" ? "/api" : "http://localhost:3002");
 
 type ModalState =
   | { type: "none" }
@@ -39,7 +37,7 @@ type ModalState =
   | { type: "new_code_confirm" };
 
 export function RedeemContent() {
-  const apiBase = getApiBase();
+  const apiBase = API_BASE;
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [phase, setPhase]                   = useState<Phase>("form");
