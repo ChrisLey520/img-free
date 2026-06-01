@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { z } from 'zod';
-import { AiSpriteService } from './ai-sprite.service.js';
+import { AiSpriteService, type PipelineMode } from './ai-sprite.service.js';
 
 const RequestSchema = z.object({
   characterDesc: z.string().default(''),
@@ -17,6 +17,7 @@ const RequestSchema = z.object({
   cellW:         z.coerce.number().int().min(16).max(256).default(64),
   cellH:         z.coerce.number().int().min(16).max(256).default(64),
   style:         z.enum(['pixel', 'smooth']).default('pixel'),
+  mode:          z.enum(['img2img', 'controlnet']).default('img2img'),
 });
 
 @Controller('ai-sprite')
@@ -41,6 +42,7 @@ export class AiSpriteController {
       cellW:         parsed.data.cellW,
       cellH:         parsed.data.cellH,
       style:         parsed.data.style,
+      mode:          parsed.data.mode as PipelineMode,
     });
   }
 }

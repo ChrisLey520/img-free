@@ -18,11 +18,15 @@ const API_BASE =
 
 const PRESET_ACTIONS = ["行走", "奔跑", "待机", "跳跃", "攻击", "受伤", "死亡"];
 
+type PipelineMode = "img2img" | "controlnet";
+
 interface GenerateResult {
   frames: string[];
+  posePreviewDataUrls: string[];
   frameCount: number;
   cellW: number;
   cellH: number;
+  mode: PipelineMode;
 }
 
 export function AiSpriteWorkspace() {
@@ -35,6 +39,7 @@ export function AiSpriteWorkspace() {
   const [frameCount, setFrameCount]   = useState(4);
   const [cellSize, setCellSize]       = useState(64);
   const [style, setStyle]             = useState<"pixel" | "smooth">("pixel");
+  const [mode, setMode]               = useState<PipelineMode>("img2img");
   const [busy, setBusy]               = useState(false);
   const [error, setError]             = useState("");
   const [result, setResult]           = useState<GenerateResult | null>(null);
@@ -68,6 +73,7 @@ export function AiSpriteWorkspace() {
       fd.set("cellW", String(cellSize));
       fd.set("cellH", String(cellSize));
       fd.set("style", style);
+      fd.set("mode", mode);
 
       const res  = await fetch(`${API_BASE}/ai-sprite/generate`, { method: "POST", body: fd });
       const json = (await res.json()) as GenerateResult & { message?: string };
@@ -192,6 +198,29 @@ export function AiSpriteWorkspace() {
             </div>
           </div>
 
+          {/* Pipeline mode */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">生成管线</Label>
+            <div className="space-y-1.5">
+              {([
+                { key: "img2img",    label: "⚡ 标准 img2img",        desc: "快速，基于参考图风格迁移" },
+                { key: "controlnet", label: "🦴 ControlNet 骨骼绑定", desc: "预置骨骼姿态，动作更标准" },
+              ] as const).map((m) => (
+                <button key={m.key} type="button" onClick={() => setMode(m.key)}
+                  className={`w-full rounded border px-3 py-2 text-xs text-left transition-colors ${
+                    mode === m.key ? "border-primary bg-primary/10 text-primary font-semibold" : "border-border hover:border-primary/50"}`}>
+                  <div className="font-medium">{m.label}</div>
+                  <div className="text-muted-foreground mt-0.5">{m.desc}</div>
+                </button>
+              ))}
+            </div>
+            {mode === "controlnet" && (
+              <p className="text-xs text-muted-foreground bg-muted rounded p-2">
+                骨骼姿态由预置库驱动，对应 7 种动作各 4 帧关键姿势
+              </p>
+            )}
+          </div>
+
           {error && (
             <Alert variant="destructive">
               <AlertDescription className="text-xs">{error}</AlertDescription>
@@ -220,6 +249,30 @@ export function AiSpriteWorkspace() {
               <Badge variant="outline">{effectiveAction}</Badge>
               <Badge variant="outline">{style === "pixel" ? "像素游戏风" : "自然色彩"}</Badge>
             </div>
+
+            {/* ControlNet 骨骼预览 */}
+            {result.mode === "controlnet" && result.posePreviewDataUrls.length > 0 && (
+              <Card>
+                <CardHeader className="py-3 px-4">
+                  <CardTitle className="text-sm">骨骼姿态（ControlNet conditioning）</CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-4">
+                  <div className="flex gap-2 flex-wrap">
+                    {result.posePreviewDataUrls.map((url, i) => (
+                      <div key={i} className="text-center space-y-1">
+                        <img src={url} alt={`pose ${i + 1}`}
+                          style={{ imageRendering: "pixelated", width: 64, height: 64 }}
+                          className="rounded border border-muted" />
+                        <p className="text-xs text-muted-foreground">帧 {i + 1}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    以上为传入 ControlNet 的 OpenPose 骨骼图，用于约束每帧的姿态
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Frame strip */}
             <Card>
