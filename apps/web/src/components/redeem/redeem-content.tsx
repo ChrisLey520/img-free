@@ -9,6 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Modal } from "@/components/ui/modal";
 
 type PresetKey = "mini" | "standard" | "hd";
+type StyleKey = "natural" | "retro";
+
+const STYLES: { key: StyleKey; label: string; desc: string }[] = [
+  { key: "natural", label: "🎨 自然色彩", desc: "完整色彩，还原真实头像" },
+  { key: "retro",   label: "🕹 像素游戏风", desc: "64 色限色 + 抖动，复古感" },
+];
 
 const PRESETS: { key: PresetKey; label: string; desc: string }[] = [
   { key: "mini",     label: "32×32 迷你版",  desc: "适合小头像、表情包" },
@@ -36,6 +42,7 @@ export function RedeemContent() {
   const [file, setFile]               = useState<File | null>(null);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
   const [preset, setPreset]           = useState<PresetKey>("standard");
+  const [style, setStyle]             = useState<StyleKey>("natural");
   const [code, setCode]               = useState("");
   const [busy, setBusy]               = useState(false);
   const [convertError, setConvertError] = useState("");
@@ -83,6 +90,7 @@ export function RedeemContent() {
       const fd = new FormData();
       fd.set("code", code.trim());
       fd.set("preset", preset);
+      fd.set("style", style);
       fd.set("image", file, file.name);
 
       const res = await fetch(`${apiBase}/codes/redeem`, { method: "POST", body: fd });
@@ -213,6 +221,24 @@ export function RedeemContent() {
                     }`}>
                     <div className="font-medium">{p.label}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">{p.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Style */}
+            <div className="space-y-2">
+              <Label>图片风格</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {STYLES.map((s) => (
+                  <button key={s.key} type="button" onClick={() => setStyle(s.key)}
+                    className={`rounded-lg border p-3 text-center text-sm transition-colors ${
+                      style === s.key
+                        ? "border-primary bg-primary/10 text-primary font-semibold"
+                        : "border-border hover:border-primary/50"
+                    }`}>
+                    <div className="font-medium">{s.label}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{s.desc}</div>
                   </button>
                 ))}
               </div>

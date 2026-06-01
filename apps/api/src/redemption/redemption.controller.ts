@@ -15,7 +15,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { z } from 'zod';
-import { RedemptionService, PIXEL_PRESETS, type PresetKey } from './redemption.service.js';
+import { RedemptionService, PIXEL_PRESETS, type PresetKey, type StyleKey } from './redemption.service.js';
 
 const ADMIN_KEY = process.env.ADMIN_KEY ?? '';
 
@@ -29,6 +29,7 @@ const ValidateSchema = z.object({ code: z.string().min(1) });
 const RedeemBodySchema = z.object({
   code: z.string().min(1),
   preset: z.enum(['mini', 'standard', 'hd']).default('standard'),
+  style: z.enum(['natural', 'retro']).default('natural'),
 });
 
 @Controller()
@@ -73,6 +74,7 @@ export class RedemptionController {
       file.buffer,
       file.originalname,
       parsed.data.preset as PresetKey,
+      parsed.data.style as StyleKey,
     );
   }
 

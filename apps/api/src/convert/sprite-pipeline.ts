@@ -95,7 +95,7 @@ export async function buildSpritePngBuffer(
     ?? sharp.kernel.nearest;
   const pngOptions: sharp.PngOptions =
     pc != null
-      ? { palette: true, colors: pc, compressionLevel: pngCompressionLevel }
+      ? { palette: true, colors: pc, dither: 1.0, compressionLevel: pngCompressionLevel }
       : { compressionLevel: pngCompressionLevel };
 
   if (fit === 'inside') {

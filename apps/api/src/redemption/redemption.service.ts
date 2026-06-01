@@ -22,6 +22,14 @@ export const PIXEL_PRESETS = {
 } as const;
 
 export type PresetKey = keyof typeof PIXEL_PRESETS;
+export type StyleKey = 'natural' | 'retro';
+
+/** 目标尺寸越小，缩放损失越大，锐化要更强 */
+const SHARPEN_SIGMA: Record<PresetKey, number> = {
+  mini: 1.6,
+  standard: 1.2,
+  hd: 0.8,
+};
 
 @Injectable()
 export class RedemptionService {
@@ -63,7 +71,7 @@ export class RedemptionService {
     return { valid: true };
   }
 
-  async redeem(code: string, imageBuffer: Buffer, filename: string, preset: PresetKey) {
+  async redeem(code: string, imageBuffer: Buffer, filename: string, preset: PresetKey, style: StyleKey = 'natural') {
     const record = await this.db.redemptionCode.findUnique({ where: { code } });
     if (!record) throw new NotFoundException('制作码不存在');
     if (record.status === 'USED') {
@@ -82,15 +90,29 @@ export class RedemptionService {
 
     const { width, height } = PIXEL_PRESETS[preset];
 
-    // 前处理：锐化保留缩小前的边缘细节 + 轻微提升饱和度让颜色更鲜艳
+    // 前处理：
+    //   1. normalize   — 自动曝光校正，把最暗/最亮拉到全范围
+    //   2. clahe       — 局部对比度增强，改善脸部受光不均
+    //   3. sharpen     — 按目标尺寸自适应锐化，保留缩小前的边缘细节
+    //   4. modulate    — 轻微提升饱和度，让颜色更鲜艳
     const enhanced = await sharp(imageBuffer, { failOn: 'none' })
-      .sharpen({ sigma: 1.2 })
+      .normalize()
+      .clahe({ width: 64, height: 64, maxSlope: 3 })
+      .sharpen({ sigma: SHARPEN_SIGMA[preset] })
       .modulate({ saturation: 1.25 })
       .png()
       .toBuffer();
 
     const result = await this.convertService.convert(enhanced, filename, 'png', {
-      sprite: { enabled: true, width, height, fit: 'inside', kernel: 'lanczos3' },
+      sprite: {
+        enabled: true,
+        width,
+        height,
+        fit: 'inside',
+        kernel: 'lanczos3',
+        // retro 风格：限 64 色 + Floyd-Steinberg 抖动
+        ...(style === 'retro' ? { paletteColors: 64 } : {}),
+      },
     });
 
     const outputUrl = result.output.dataUrl;
