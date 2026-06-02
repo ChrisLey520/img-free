@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const API_BASE =
 const PRESET_ACTIONS = ["行走", "奔跑", "待机", "跳跃", "攻击", "受伤", "死亡", "防御", "蹲伏", "翻滚", "施法", "推", "爬行", "胜利"];
 
 type PipelineMode = "img2img" | "controlnet";
+type Provider = "replicate" | "huggingface";
 
 interface GenerateResult {
   frames: string[];
@@ -30,6 +32,7 @@ interface GenerateResult {
 }
 
 export function AiSpriteWorkspace() {
+  const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
   const [image, setImage]             = useState<File | null>(null);
   const [localPreview, setLocalPreview] = useState<string | null>(null);
@@ -40,6 +43,7 @@ export function AiSpriteWorkspace() {
   const [cellSize, setCellSize]       = useState(64);
   const [style, setStyle]             = useState<"pixel" | "smooth">("pixel");
   const [mode, setMode]               = useState<PipelineMode>("img2img");
+  const [provider, setProvider]       = useState<Provider>("replicate");
   const [busy, setBusy]               = useState(false);
   const [error, setError]             = useState("");
   const [result, setResult]           = useState<GenerateResult | null>(null);
@@ -74,6 +78,7 @@ export function AiSpriteWorkspace() {
       fd.set("cellH", String(cellSize));
       fd.set("style", style);
       fd.set("mode", mode);
+      fd.set("provider", provider);
 
       const res  = await fetch(`${API_BASE}/ai-sprite/generate`, { method: "POST", body: fd });
       const json = (await res.json()) as GenerateResult & { message?: string };
@@ -97,6 +102,15 @@ export function AiSpriteWorkspace() {
   function downloadAll() {
     if (!result) return;
     result.frames.forEach((url, i) => downloadFrame(url, i));
+  }
+
+  function sendToSpriteSheet() {
+    if (!result) return;
+    sessionStorage.setItem(
+      "ai_sprite_transfer",
+      JSON.stringify({ frames: result.frames, action: effectiveAction, cellSize: result.cellW }),
+    );
+    router.push("/sprite-sheet");
   }
 
   const scale = cellSize <= 32 ? 6 : cellSize <= 64 ? 4 : 2;
@@ -196,6 +210,29 @@ export function AiSpriteWorkspace() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Provider */}
+          <div className="space-y-1.5">
+            <Label className="text-xs">提供商</Label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {([
+                { key: "replicate",   label: "Replicate",    desc: "付费·支持 img2img / ControlNet" },
+                { key: "huggingface", label: "HuggingFace",  desc: "免费额度·纯文本生成" },
+              ] as const).map((p) => (
+                <button key={p.key} type="button" onClick={() => setProvider(p.key)}
+                  className={`rounded border px-2 py-1.5 text-xs text-left transition-colors ${
+                    provider === p.key ? "border-primary bg-primary/10 text-primary font-semibold" : "border-border hover:border-primary/50"}`}>
+                  <div className="font-medium">{p.label}</div>
+                  <div className="text-muted-foreground mt-0.5 leading-tight">{p.desc}</div>
+                </button>
+              ))}
+            </div>
+            {provider === "huggingface" && (
+              <p className="text-xs text-muted-foreground bg-muted rounded p-2">
+                需配置 HUGGINGFACE_API_TOKEN · 不使用参考图 conditioning，仅凭提示词生成
+              </p>
+            )}
           </div>
 
           {/* Pipeline mode */}
@@ -332,6 +369,9 @@ export function AiSpriteWorkspace() {
               </CardHeader>
               <CardContent className="px-4 pb-4 space-y-2">
                 <div className="flex gap-2 flex-wrap">
+                  <Button size="sm" onClick={sendToSpriteSheet}>
+                    发送到精灵表制作 →
+                  </Button>
                   <Button variant="outline" size="sm" onClick={downloadAll}>
                     下载全部帧（{result.frameCount} 张 PNG）
                   </Button>
@@ -340,7 +380,7 @@ export function AiSpriteWorkspace() {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  提示：下载帧后可拖入「精灵表制作」页面拼合为动画
+                  点击「发送到精灵表制作」可一键跳转并自动导入所有帧
                 </p>
               </CardContent>
             </Card>

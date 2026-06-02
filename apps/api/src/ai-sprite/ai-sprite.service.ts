@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import Replicate from 'replicate';
+import { HfInference } from '@huggingface/inference';
 import sharp from 'sharp';
 import axios from 'axios';
 import { getSkeletons, ACTION_KEY_MAP, type Skeleton } from './skeleton-poses.js';
@@ -7,7 +8,7 @@ import { renderOpenPose } from './openpose-render.js';
 
 /** 默认 img2img 模型（可通过环境变量覆盖） */
 const DEFAULT_IMG2IMG_MODEL =
-  'stability-ai/sdxl:39ed52f2319f9c048d3054f925b6ccde6f6e9fddebb3d8a2cb09aac5fdb7e74f';
+  'stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b';
 
 /** 默认 ControlNet OpenPose 模型（可通过环境变量覆盖） */
 const DEFAULT_CONTROLNET_MODEL =
@@ -26,6 +27,7 @@ const ACTION_FRAME_HINTS: Record<string, string[]> = {
 };
 
 export type PipelineMode = 'img2img' | 'controlnet';
+export type Provider = 'replicate' | 'huggingface';
 
 export interface GenerateRequest {
   imageBuffer: Buffer;
@@ -36,6 +38,7 @@ export interface GenerateRequest {
   cellH: number;
   style: 'pixel' | 'smooth';
   mode: PipelineMode;
+  provider: Provider;
 }
 
 @Injectable()
@@ -45,15 +48,24 @@ export class AiSpriteService {
   private readonly img2imgModel: string;
   private readonly controlnetModel: string;
 
+  private readonly hf: HfInference;
+  private readonly hfModel: string;
+
   constructor() {
-    const token = process.env.REPLICATE_API_TOKEN;
-    if (!token) this.logger.warn('REPLICATE_API_TOKEN not set — AI sprite generation unavailable');
-    this.replicate = new Replicate({ auth: token ?? '' });
+    const replicateToken = process.env.REPLICATE_API_TOKEN;
+    if (!replicateToken) this.logger.warn('REPLICATE_API_TOKEN not set — Replicate unavailable');
+    this.replicate = new Replicate({ auth: replicateToken ?? '' });
     this.img2imgModel = process.env.REPLICATE_SPRITE_MODEL ?? DEFAULT_IMG2IMG_MODEL;
     this.controlnetModel = process.env.REPLICATE_CONTROLNET_MODEL ?? DEFAULT_CONTROLNET_MODEL;
+
+    const hfToken = process.env.HUGGINGFACE_API_TOKEN;
+    if (!hfToken) this.logger.warn('HUGGINGFACE_API_TOKEN not set — HuggingFace unavailable');
+    this.hf = new HfInference(hfToken ?? '');
+    this.hfModel = process.env.HF_SPRITE_MODEL ?? 'nerijs/pixel-art-xl';
   }
 
   get isConfigured() { return !!process.env.REPLICATE_API_TOKEN; }
+  get isHuggingFaceConfigured() { return !!process.env.HUGGINGFACE_API_TOKEN; }
 
   // ── 公共工具 ──────────────────────────────────────────────────
 
@@ -138,6 +150,27 @@ export class AiSpriteService {
     return this.downloadFromReplicate(output);
   }
 
+  // ── HuggingFace 管线 ─────────────────────────────────────────
+
+  private async generateHuggingFace(prompt: string): Promise<Buffer> {
+    const output = await this.hf.textToImage({
+      model: this.hfModel,
+      inputs: prompt,
+      parameters: {
+        negative_prompt: this.buildNegativePrompt(),
+        guidance_scale: 7.5,
+        width: 512,
+        height: 512,
+      },
+    });
+    if (output.startsWith('http')) {
+      const resp = await axios.get<ArrayBuffer>(output, { responseType: 'arraybuffer' });
+      return Buffer.from(resp.data);
+    }
+    const base64 = output.includes(',') ? output.split(',')[1]! : output;
+    return Buffer.from(base64, 'base64');
+  }
+
   // ── ControlNet 管线 ───────────────────────────────────────────
 
   /**
@@ -178,13 +211,18 @@ export class AiSpriteService {
   // ── 主入口 ────────────────────────────────────────────────────
 
   async generate(req: GenerateRequest) {
-    if (!this.isConfigured) {
+    const { imageBuffer, characterDesc, action, frameCount, cellW, cellH, style, mode, provider } = req;
+
+    if (provider === 'huggingface' && !this.isHuggingFaceConfigured) {
+      throw new BadRequestException(
+        'HUGGINGFACE_API_TOKEN not configured. Add it to your environment variables.',
+      );
+    }
+    if (provider === 'replicate' && !this.isConfigured) {
       throw new BadRequestException(
         'REPLICATE_API_TOKEN not configured. Add it to your environment variables.',
       );
     }
-
-    const { imageBuffer, characterDesc, action, frameCount, cellW, cellH, style, mode } = req;
     const count = Math.max(1, Math.min(8, frameCount));
 
     const imageDataUrl = `data:image/png;base64,${
@@ -194,12 +232,15 @@ export class AiSpriteService {
     const frameHints = this.getFrameHints(action, count);
     const skeletons  = mode === 'controlnet' ? getSkeletons(action, count) : [];
 
-    this.logger.log(`Generating ${count} frames | action="${action}" | mode=${mode}`);
+    this.logger.log(`Generating ${count} frames | action="${action}" | mode=${mode} | provider=${provider}`);
 
     // 并行生成所有帧
     const rawFrames = await Promise.all(
       frameHints.map((hint, i) => {
         const prompt = this.buildPrompt(characterDesc, action, hint, i, count, mode);
+        if (provider === 'huggingface') {
+          return this.generateHuggingFace(prompt);
+        }
         if (mode === 'controlnet') {
           return this.generateControlNet(skeletons[i], imageDataUrl, prompt);
         }

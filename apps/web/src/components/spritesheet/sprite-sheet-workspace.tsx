@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ArrowDownIcon, ArrowUpIcon, Trash2Icon } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,29 @@ export function SpriteSheetWorkspace() {
   const [busy, setBusy]       = useState(false);
   const [error, setError]     = useState("");
   const [result, setResult]   = useState<BuildResult | null>(null);
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem("ai_sprite_transfer");
+    if (!raw) return;
+    sessionStorage.removeItem("ai_sprite_transfer");
+    const { frames, action, cellSize } = JSON.parse(raw) as {
+      frames: string[];
+      action: string;
+      cellSize: number;
+    };
+    Promise.all(
+      frames.map(async (dataUrl, i) => {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `${action}_frame_${i + 1}.png`, { type: "image/png" });
+        return { id: nextId(), file, localUrl: URL.createObjectURL(file), name: `${action}_${i + 1}` };
+      }),
+    ).then((items) => {
+      setFrames(items);
+      setCellW(cellSize);
+      setCellH(cellSize);
+    });
+  }, []);
 
   function addFiles(fileList: FileList | null) {
     if (!fileList) return;

@@ -14,6 +14,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@huggingface/inference':
+        specifier: ^4.13.18
+        version: 4.13.18
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.19(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -566,6 +569,17 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@huggingface/inference@4.13.18':
+    resolution: {integrity: sha512-n0dP3FhmIqJoLU5yGoG6lBZVW50+IgeLDubLL1P28zG4Adp2rhKYQGt5j52JCwlmKDf2ruWjuIcfrjkobT0RlQ==}
+    engines: {node: '>=18'}
+
+  '@huggingface/jinja@0.5.9':
+    resolution: {integrity: sha512-uWTG+l3VJRsl7EXxYizuL3P+cCPoc3cRqbWWRcQN0FhejRfbdq0RNhCmbY/YDtnTcz9icdLYuLDjsnz4d8JMuw==}
+    engines: {node: '>=18'}
+
+  '@huggingface/tasks@0.21.4':
+    resolution: {integrity: sha512-h5JmwB0JktlmmLkeKLeAoCnc0IcJbu7oED3bCwHEzem1cj/JXMyhSKFs/KayqCYXAnhK569Sqs+COHspoRQIew==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -5665,6 +5679,15 @@ snapshots:
   '@hono/node-server@1.19.14(hono@4.12.15)':
     dependencies:
       hono: 4.12.15
+
+  '@huggingface/inference@4.13.18':
+    dependencies:
+      '@huggingface/jinja': 0.5.9
+      '@huggingface/tasks': 0.21.4
+
+  '@huggingface/jinja@0.5.9': {}
+
+  '@huggingface/tasks@0.21.4': {}
 
   '@humanfs/core@0.19.2':
     dependencies:
