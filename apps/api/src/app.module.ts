@@ -10,6 +10,7 @@ import { CleanupModule } from './cleanup/cleanup.module.js';
 import { PddModule } from './pdd/pdd.module.js';
 import { SpritesheetModule } from './spritesheet/spritesheet.module.js';
 import { AiSpriteModule } from './ai-sprite/ai-sprite.module.js';
+import { ImageGenModule } from './image-gen/image-gen.module.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AiSpriteModule } from './ai-sprite/ai-sprite.module.js';
     PddModule,
     SpritesheetModule,
     AiSpriteModule,
+    ImageGenModule,
   ],
   controllers: [AppController],
   providers: [AppService],

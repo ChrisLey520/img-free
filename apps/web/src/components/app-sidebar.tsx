@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BotIcon, ImageIcon, LayersIcon, LayoutGridIcon, SettingsIcon, SparklesIcon } from "lucide-react";
+import { BotIcon, ImageIcon, LayersIcon, LayoutGridIcon, SettingsIcon, SparklesIcon, Wand2Icon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -65,6 +65,8 @@ export function AppSidebar({ apiBase, tool }: Props) {
       router.push(`${pathPrefix}/sprite-sheet`);
     } else if (nextTool === "aisprite") {
       router.push(`${pathPrefix}/ai-sprite`);
+    } else if (nextTool === "imagegen") {
+      router.push(`${pathPrefix}/image-gen`);
     } else {
       router.push(pathPrefix || "/");
     }
@@ -76,7 +78,7 @@ export function AppSidebar({ apiBase, tool }: Props) {
     const nl = (locales as readonly string[]).includes(nextLocale) ? (nextLocale as Locale) : locale;
     document.cookie = `locale=${nl}; path=/; samesite=lax`;
     const prefix = nl === "zh-CN" ? "" : `/${nl}`;
-    const base = tool === "sprite" ? "/sprite" : tool === "redeem" ? "/pixel" : tool === "spritesheet" ? "/sprite-sheet" : tool === "aisprite" ? "/ai-sprite" : "/";
+    const base = tool === "sprite" ? "/sprite" : tool === "redeem" ? "/pixel" : tool === "spritesheet" ? "/sprite-sheet" : tool === "aisprite" ? "/ai-sprite" : tool === "imagegen" ? "/image-gen" : "/";
     router.push(`${prefix}${base === "/" ? "" : base}`);
     router.refresh();
   }
@@ -135,6 +137,19 @@ export function AppSidebar({ apiBase, tool }: Props) {
                       <button type="button">
                         <BotIcon />
                         <span>{t("nav.aisprite")}</span>
+                      </button>
+                    }
+                  />
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={tool === "imagegen"}
+                    tooltip={t("nav.imagegen")}
+                    onClick={() => goTool("imagegen")}
+                    render={
+                      <button type="button">
+                        <Wand2Icon />
+                        <span>{t("nav.imagegen")}</span>
                       </button>
                     }
                   />
