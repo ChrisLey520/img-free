@@ -36,6 +36,7 @@
     "imagetracerjs": "^1.2.6",
     "nanoid": "^5.1.11",
     "node-cron": "^4.2.1",
+    "onnxruntime-node": "^1.26.0",
     "openai": "^6.41.0",
     "png-to-ico": "^3.0.1",
     "potrace": "^2.1.8",

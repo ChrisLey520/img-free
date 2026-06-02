@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BotIcon, ImageIcon, LayersIcon, LayoutGridIcon, SettingsIcon, SparklesIcon, Wand2Icon } from "lucide-react";
+import { BotIcon, ImageIcon, LayersIcon, LayoutGridIcon, PaletteIcon, SettingsIcon, SparklesIcon, Wand2Icon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -67,6 +67,8 @@ export function AppSidebar({ apiBase, tool }: Props) {
       router.push(`${pathPrefix}/ai-sprite`);
     } else if (nextTool === "imagegen") {
       router.push(`${pathPrefix}/image-gen`);
+    } else if (nextTool === "cartoon") {
+      router.push(`${pathPrefix}/cartoon`);
     } else {
       router.push(pathPrefix || "/");
     }
@@ -78,7 +80,7 @@ export function AppSidebar({ apiBase, tool }: Props) {
     const nl = (locales as readonly string[]).includes(nextLocale) ? (nextLocale as Locale) : locale;
     document.cookie = `locale=${nl}; path=/; samesite=lax`;
     const prefix = nl === "zh-CN" ? "" : `/${nl}`;
-    const base = tool === "sprite" ? "/sprite" : tool === "redeem" ? "/pixel" : tool === "spritesheet" ? "/sprite-sheet" : tool === "aisprite" ? "/ai-sprite" : tool === "imagegen" ? "/image-gen" : "/";
+    const base = tool === "sprite" ? "/sprite" : tool === "redeem" ? "/pixel" : tool === "spritesheet" ? "/sprite-sheet" : tool === "aisprite" ? "/ai-sprite" : tool === "imagegen" ? "/image-gen" : tool === "cartoon" ? "/cartoon" : "/";
     router.push(`${prefix}${base === "/" ? "" : base}`);
     router.refresh();
   }
@@ -150,6 +152,19 @@ export function AppSidebar({ apiBase, tool }: Props) {
                       <button type="button">
                         <Wand2Icon />
                         <span>{t("nav.imagegen")}</span>
+                      </button>
+                    }
+                  />
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={tool === "cartoon"}
+                    tooltip={t("nav.cartoon")}
+                    onClick={() => goTool("cartoon")}
+                    render={
+                      <button type="button">
+                        <PaletteIcon />
+                        <span>{t("nav.cartoon")}</span>
                       </button>
                     }
                   />

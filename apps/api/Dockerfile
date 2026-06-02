@@ -27,6 +27,7 @@ COPY apps/api/package.json apps/api/
 
 RUN pnpm install --frozen-lockfile --filter api --prod
 
+COPY models models
 COPY --from=builder /repo/apps/api/dist apps/api/dist
 COPY --from=builder /repo/apps/api/bin apps/api/bin
 COPY --from=builder /repo/apps/api/prisma apps/api/prisma

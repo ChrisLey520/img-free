@@ -6,12 +6,13 @@ import { RedeemContent } from "@/components/redeem/redeem-content";
 import { SpriteSheetWorkspace } from "@/components/spritesheet/sprite-sheet-workspace";
 import { AiSpriteWorkspace } from "@/components/ai-sprite/ai-sprite-workspace";
 import { ImageGenWorkspace } from "@/components/image-gen/image-gen-workspace";
+import { CartoonWorkspace } from "@/components/cartoon/cartoon-workspace";
 import { useConverter } from "@/hooks/use-converter";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { LocaleProvider } from "@/i18n/locale-provider";
 import type { Locale } from "@/i18n/i18n";
 
-export type Tool = "format" | "sprite" | "redeem" | "spritesheet" | "aisprite" | "imagegen";
+export type Tool = "format" | "sprite" | "redeem" | "spritesheet" | "aisprite" | "imagegen" | "cartoon";
 
 export function AppShell({ locale, tool }: { locale: Locale; tool: Tool }) {
   const model = useConverter();
@@ -29,7 +30,9 @@ export function AppShell({ locale, tool }: { locale: Locale; tool: Tool }) {
                 ? <AiSpriteWorkspace />
                 : tool === "imagegen"
                   ? <ImageGenWorkspace />
-                  : <ConverterWorkspace model={model} tool={tool} />}
+                  : tool === "cartoon"
+                    ? <CartoonWorkspace />
+                    : <ConverterWorkspace model={model} tool={tool} />}
         </SidebarInset>
       </SidebarProvider>
     </LocaleProvider>

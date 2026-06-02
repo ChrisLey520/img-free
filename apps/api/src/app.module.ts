@@ -11,6 +11,7 @@ import { PddModule } from './pdd/pdd.module.js';
 import { SpritesheetModule } from './spritesheet/spritesheet.module.js';
 import { AiSpriteModule } from './ai-sprite/ai-sprite.module.js';
 import { ImageGenModule } from './image-gen/image-gen.module.js';
+import { CartoonModule } from './cartoon/cartoon.module.js';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ImageGenModule } from './image-gen/image-gen.module.js';
     SpritesheetModule,
     AiSpriteModule,
     ImageGenModule,
+    CartoonModule,
   ],
   controllers: [AppController],
   providers: [AppService],

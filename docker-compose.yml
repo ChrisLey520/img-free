@@ -16,6 +16,7 @@ services:
     volumes:
       - api-data:/app/data
       - api-uploads:/app/uploads
+      - api-models:/repo/models
 
   web:
     build:
@@ -33,3 +34,4 @@ services:
 volumes:
   api-data:
   api-uploads:
+  api-models:
