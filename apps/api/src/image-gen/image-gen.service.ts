@@ -22,15 +22,19 @@ const LARGE_SIZES   = ['1024x1024', '1792x1024', '1024x1792'];
 @Injectable()
 export class ImageGenService {
   private readonly logger = new Logger(ImageGenService.name);
-  private readonly client: OpenAI;
+  private readonly client?: OpenAI;
 
   constructor() {
     const key = process.env.OPENAI_API_KEY;
-    if (!key) this.logger.warn('OPENAI_API_KEY not set — image generation unavailable');
-    this.client = new OpenAI({ apiKey: key ?? '' });
+    if (!key) {
+      this.logger.warn('OPENAI_API_KEY not set — image generation unavailable');
+      return;
+    }
+
+    this.client = new OpenAI({ apiKey: key });
   }
 
-  get isConfigured() { return !!process.env.OPENAI_API_KEY; }
+  get isConfigured() { return !!this.client; }
 
   private parseError(err: unknown): string {
     const msg = err instanceof Error ? err.message : String(err);
@@ -49,7 +53,7 @@ export class ImageGenService {
   }
 
   async generate(req: ImageGenRequest): Promise<{ images: string[] }> {
-    if (!this.isConfigured) {
+    if (!this.client) {
       throw new BadRequestException('OPENAI_API_KEY not configured. Add it to your environment variables.');
     }
 
@@ -78,17 +82,16 @@ export class ImageGenService {
         return { images };
       }
 
-      const genParams: Parameters<typeof this.client.images.generate>[0] = {
+      type GenQuality = Parameters<typeof this.client.images.generate>[0] extends { quality?: infer Q } ? Q : never;
+      const genParams = {
         model,
         prompt,
         n,
         size: validSize as Parameters<typeof this.client.images.generate>[0]['size'],
-        response_format: 'b64_json',
+        response_format: 'b64_json' as const,
+        ...(quality && model !== 'dall-e-2' ? { quality: quality as GenQuality } : {}),
       };
-      if (quality && model !== 'dall-e-2') {
-        (genParams as Record<string, unknown>).quality = quality;
-      }
-      const resp = await this.client.images.generate(genParams);
+      const resp = await this.client.images.generate(genParams) as { data: Array<{ b64_json?: string | null }> };
       const images = (resp.data ?? []).map((d) => this.toDataUrl(d.b64_json ?? ''));
       return { images };
     } catch (err) {
