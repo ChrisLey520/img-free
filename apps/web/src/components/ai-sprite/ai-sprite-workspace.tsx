@@ -141,11 +141,11 @@ export function AiSpriteWorkspace() {
           {/* Character description */}
           <div className="space-y-1.5">
             <Label className="text-xs">角色描述（可选）</Label>
-            <Input
+            <textarea
               placeholder="e.g. 红衣战士，头戴盔甲，手持宝剑"
               value={characterDesc}
               onChange={(e) => setCharacterDesc(e.target.value)}
-              className="text-xs h-8"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs min-h-[72px] resize-none focus:outline-none focus:ring-1 focus:ring-ring"
             />
             <p className="text-xs text-muted-foreground">描述得越详细，一致性越好</p>
           </div>
@@ -167,11 +167,11 @@ export function AiSpriteWorkspace() {
               </SelectContent>
             </Select>
             {action === "__custom__" && (
-              <Input
+              <textarea
                 placeholder="输入动作描述，如：施法、挥手"
                 value={customAction}
                 onChange={(e) => setCustomAction(e.target.value)}
-                className="text-xs h-8"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs min-h-[60px] resize-none focus:outline-none focus:ring-1 focus:ring-ring"
               />
             )}
           </div>
