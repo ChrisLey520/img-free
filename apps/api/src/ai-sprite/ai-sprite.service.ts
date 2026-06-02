@@ -208,6 +208,32 @@ export class AiSpriteService {
     return this.downloadFromReplicate(output);
   }
 
+  // ── 错误解析 ──────────────────────────────────────────────────
+
+  private parseProviderError(err: unknown, provider: Provider): string {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (provider === 'huggingface') {
+      if (/401|unauthorized|authorization/i.test(msg))
+        return 'HuggingFace Token 无效，请检查 HUGGINGFACE_API_TOKEN';
+      if (/402|payment|credit/i.test(msg))
+        return 'HuggingFace 账户额度不足，请前往 huggingface.co 充值';
+      if (/429|rate.?limit/i.test(msg))
+        return 'HuggingFace 请求频率超限，请稍后重试';
+      if (/503|loading/i.test(msg))
+        return '模型冷启动中，请等待约 30 秒后重试';
+      return `HuggingFace 生成失败：${msg}`;
+    }
+    if (/401|invalid.?token/i.test(msg))
+      return 'Replicate Token 无效，请检查 REPLICATE_API_TOKEN';
+    if (/402|insufficient.?credit/i.test(msg))
+      return 'Replicate 额度不足，请前往 replicate.com/account/billing 充值';
+    if (/422/i.test(msg))
+      return 'Replicate 模型版本不存在，请检查 REPLICATE_SPRITE_MODEL 配置';
+    if (/429|rate.?limit/i.test(msg))
+      return 'Replicate 请求频率超限，请稍后重试';
+    return `Replicate 生成失败：${msg}`;
+  }
+
   // ── 主入口 ────────────────────────────────────────────────────
 
   async generate(req: GenerateRequest) {
@@ -235,18 +261,24 @@ export class AiSpriteService {
     this.logger.log(`Generating ${count} frames | action="${action}" | mode=${mode} | provider=${provider}`);
 
     // 并行生成所有帧
-    const rawFrames = await Promise.all(
-      frameHints.map((hint, i) => {
-        const prompt = this.buildPrompt(characterDesc, action, hint, i, count, mode);
-        if (provider === 'huggingface') {
-          return this.generateHuggingFace(prompt);
-        }
-        if (mode === 'controlnet') {
-          return this.generateControlNet(skeletons[i], imageDataUrl, prompt);
-        }
-        return this.generateImg2Img(imageDataUrl, prompt);
-      }),
-    );
+    let rawFrames: Buffer[];
+    try {
+      rawFrames = await Promise.all(
+        frameHints.map((hint, i) => {
+          const prompt = this.buildPrompt(characterDesc, action, hint, i, count, mode);
+          if (provider === 'huggingface') {
+            return this.generateHuggingFace(prompt);
+          }
+          if (mode === 'controlnet') {
+            return this.generateControlNet(skeletons[i], imageDataUrl, prompt);
+          }
+          return this.generateImg2Img(imageDataUrl, prompt);
+        }),
+      );
+    } catch (err) {
+      this.logger.error('Generation failed', err);
+      throw new BadRequestException(this.parseProviderError(err, provider));
+    }
 
     // 像素化后处理
     const frames = await Promise.all(
